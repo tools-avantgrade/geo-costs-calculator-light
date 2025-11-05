@@ -1,28 +1,49 @@
 # app.py
 # ---------------------------------------------------
-# AI Brand Monitoring - Budget Estimator (Lead Magnet)
-# Versione "light" e tool-agnostica (nessun brand citato)
+# AI Brand Monitoring - Budget Estimator (ChatGPT Focus)
+# Versione minimal e focalizzata
 # ---------------------------------------------------
 
 import streamlit as st
-import pandas as pd
 from datetime import datetime
 
 # -----------------------------
 # Configurazione pagina
 # -----------------------------
 st.set_page_config(
-    page_title="AI Brand Monitoring - Budget Estimator",
+    page_title="ChatGPT Brand Monitoring - Budget Estimator",
     page_icon="🔎",
-    layout="wide"
+    layout="centered"
 )
 
 # -----------------------------
-# Stili minimi
+# Stili custom (toni arancioni)
 # -----------------------------
+st.markdown("""
+<style>
+    .stButton>button {
+        background-color: #FF8C42;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+    }
+    .stButton>button:hover {
+        background-color: #FF7028;
+    }
+    .metric-container {
+        background-color: #FFF5EE;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #FF8C42;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 HINT = """
 <small style="opacity:0.75">
-Stima indicativa basata su benchmark di mercato e complessità del setup. 
+Stima indicativa basata su benchmark di mercato per il monitoraggio ChatGPT. 
 Non sostituisce un preventivo ufficiale.
 </small>
 """
@@ -34,8 +55,7 @@ def currency_fmt(val, currency="€"):
         return f"{currency}{val}"
 
 # -----------------------------
-# Heuristics di pricing (tool-agnostiche)
-# NOTE: semplici regole per stimare un range in base alla complessità
+# Logica di pricing (ChatGPT focus)
 # -----------------------------
 FREQUENCY_MULTIPLIER = {
     "Settimanale": 1.00,
@@ -43,37 +63,15 @@ FREQUENCY_MULTIPLIER = {
     "Real-time": 1.90
 }
 
-PLATFORM_COMPLEXITY = {
-    # Pondera la difficoltà media di integrazione/monitoraggio per piattaforma
-    "ChatGPT": 1.0,
-    "Perplexity": 1.0,
-    "Google AI Overviews": 1.15,
-    "Gemini": 1.0,
-    "Copilot": 1.05
-}
-
 def estimate_budget(
     prompts: int,
     competitors: int,
-    platforms: list,
     frequency: str,
     pages: int,
     domains: int,
-    currency: str = "€",
     billing_cycle: str = "monthly"
 ):
-    """
-    Crea un range (low-high) tool-agnostico basato su:
-    - volume prompt
-    - n. piattaforme
-    - frequenza monitoraggio
-    - n. competitor
-    - n. pagine e domini
-    """
-
-    # 1) BASE: costo "core" per set-up & tracking
-    # -------------------------------------------
-    # Curva a tratti per riflettere fasce di utilizzo
+    # Base cost
     if prompts <= 25:
         base_low, base_high = 80, 140
     elif prompts <= 100:
@@ -81,28 +79,17 @@ def estimate_budget(
     elif prompts <= 400:
         base_low, base_high = 360, 740
     else:
-        # oltre 400 prompt: base + scaglioni
         extra_blocks = max(0, (prompts - 400 + 99) // 100)
         base_low, base_high = 740 + 90*extra_blocks, 1200 + 150*extra_blocks
 
-    # 2) Piattaforme: maggiori integrazioni ⇒ più complessità
-    # -------------------------------------------------------
-    platform_factor = sum(PLATFORM_COMPLEXITY.get(p, 1.0) for p in platforms)
-    platform_factor = max(1.0, platform_factor)  # minimo 1
-
-    # 3) Frequenza: da weekly a realtime
-    # ----------------------------------
+    # Frequenza
     freq_mult = FREQUENCY_MULTIPLIER.get(frequency, 1.0)
 
-    # 4) Competitor: arricchisce le query + reporting
-    # -----------------------------------------------
-    # (leggera incidenza, scala dolce)
+    # Competitor
     comp_low  = 10 * competitors
     comp_high = 20 * competitors
 
-    # 5) Pagine/Domain: crawling + audit + integrazione SEO/AI
-    # --------------------------------------------------------
-    # costo base per crawling & data handling
+    # Pagine
     page_bucket = 0
     if pages <= 1000:
         page_bucket = 0
@@ -114,6 +101,7 @@ def estimate_budget(
         extra = ((pages - 5000) + 999) // 1000
         page_bucket = 120 + 40 * extra
 
+    # Domini
     domain_bucket = 0
     if domains <= 1:
         domain_bucket = 0
@@ -124,12 +112,11 @@ def estimate_budget(
     else:
         domain_bucket = 120 + 20 * (domains - 10)
 
-    # 6) Aggregazione (mensile)
-    # -------------------------
-    low_month  = (base_low  + comp_low  + page_bucket + domain_bucket) * platform_factor * freq_mult
-    high_month = (base_high + comp_high + page_bucket + domain_bucket) * platform_factor * freq_mult
+    # Aggregazione mensile
+    low_month  = (base_low  + comp_low  + page_bucket + domain_bucket) * freq_mult
+    high_month = (base_high + comp_high + page_bucket + domain_bucket) * freq_mult
 
-    # Arrotonda a multipli "marketing-friendly"
+    # Arrotondamento
     def round_marketing(x):
         if x < 100:   return int(round(x / 10.0)) * 10
         if x < 1000:  return int(round(x / 25.0)) * 25
@@ -139,10 +126,8 @@ def estimate_budget(
     low_month_rounded  = round_marketing(low_month)
     high_month_rounded = round_marketing(max(high_month, low_month_rounded + 20))
 
-    # 7) Annuale (sconto medio 10–20% in base alla soglia)
-    # ----------------------------------------------------
+    # Calcolo annuale con sconto
     if billing_cycle == "yearly":
-        # sconto dinamico
         avg_m = (low_month_rounded + high_month_rounded) / 2
         if   avg_m < 200: disc = 0.90
         elif avg_m < 800: disc = 0.88
@@ -153,30 +138,25 @@ def estimate_budget(
     else:
         return (low_month_rounded, high_month_rounded, None, None)
 
-def cost_per_prompt_range(low_m, high_m, prompts):
-    if prompts <= 0:
-        return (0, 0)
-    return (low_m / prompts, high_m / prompts)
-
 # -----------------------------
 # UI
 # -----------------------------
-st.title("🔎 AI Brand Monitoring — Budget Estimator")
-st.markdown("Strumento minimale, tool-agnostico: inserisci i tuoi dati e ottieni **un range di budget** su cui basarti.")
+st.title("🔎 ChatGPT Brand Monitoring")
+st.subheader("Budget Estimator")
 st.markdown(HINT, unsafe_allow_html=True)
 st.markdown("---")
 
-# Colonne input
-c1, c2, c3 = st.columns(3)
+# Input in due colonne
+col1, col2 = st.columns(2)
 
-with c1:
+with col1:
     prompts = st.number_input(
-        "Numero di prompt/queries da monitorare",
+        "Prompt da monitorare",
         min_value=1, max_value=5000, value=100, step=10,
-        help="Esempi: 'miglior software...', 'brand vs competitor', 'alternative a...'"
+        help="Quante query vuoi tracciare su ChatGPT"
     )
     competitors = st.number_input(
-        "Numero di competitor",
+        "Competitor",
         min_value=0, max_value=30, value=3, step=1
     )
     frequency = st.select_slider(
@@ -185,132 +165,84 @@ with c1:
         value="Settimanale"
     )
 
-with c2:
-    platforms = st.multiselect(
-        "Piattaforme AI da includere",
-        ["ChatGPT", "Perplexity", "Google AI Overviews", "Gemini", "Copilot"],
-        default=["ChatGPT", "Perplexity", "Google AI Overviews"]
-    )
+with col2:
     pages = st.number_input(
-        "Pagine del/i sito/i da considerare (crawling/analisi)",
+        "Pagine sito",
         min_value=100, max_value=20000, value=1000, step=100
     )
     domains = st.number_input(
-        "Numero di domini/progetti",
+        "Domini/progetti",
         min_value=1, max_value=50, value=1, step=1
     )
-
-with c3:
     billing_cycle = st.radio(
-        "Ciclo di fatturazione",
+        "Fatturazione",
         options=["monthly", "yearly"],
-        format_func=lambda x: "Mensile" if x == "monthly" else "Annuale (sconto incluso)",
+        format_func=lambda x: "Mensile" if x == "monthly" else "Annuale",
         horizontal=True
     )
-    currency = st.selectbox("Valuta", ["€", "$", "CHF", "£"], index=0)
-    st.caption("La valuta è solo etichetta visiva.")
+
+currency = "€"
 
 st.markdown("---")
 
 # Calcolo
-if st.button("🧮 Calcola Range di Prezzo", type="primary", use_container_width=True):
+if st.button("🧮 Calcola Budget", use_container_width=True):
     low_m, high_m, low_y, high_y = estimate_budget(
         prompts=prompts,
         competitors=competitors,
-        platforms=platforms,
         frequency=frequency,
         pages=pages,
         domains=domains,
-        currency=currency,
         billing_cycle=billing_cycle
     )
 
     st.success("✅ Stima completata")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # KPI principali
+    # Metriche principali
     k1, k2, k3 = st.columns(3)
+    
     with k1:
         if billing_cycle == "monthly":
-            st.metric("Budget Mensile (range)",
-                      f"{currency_fmt(low_m, currency)} — {currency_fmt(high_m, currency)}")
+            st.metric(
+                "Budget Mensile", 
+                f"{currency_fmt(low_m, currency)} — {currency_fmt(high_m, currency)}"
+            )
         else:
-            st.metric("Budget Annuale (range)",
-                      f"{currency_fmt(low_y, currency)} — {currency_fmt(high_y, currency)}",
-                      delta=f"{currency_fmt(low_m*12, currency)}–{currency_fmt(high_m*12, currency)} prima dello sconto")
+            st.metric(
+                "Budget Annuale",
+                f"{currency_fmt(low_y, currency)} — {currency_fmt(high_y, currency)}"
+            )
 
     with k2:
-        cpp_low, cpp_high = cost_per_prompt_range(low_m, high_m, prompts)
-        st.metric("Costo per Prompt (mensile)",
-                  f"{currency}{cpp_low:,.2f} — {currency}{cpp_high:,.2f}".replace(",", "."))
+        cpp_low = low_m / prompts if prompts > 0 else 0
+        cpp_high = high_m / prompts if prompts > 0 else 0
+        st.metric(
+            "Costo per Prompt",
+            f"{currency}{cpp_low:.2f} — {currency}{cpp_high:.2f}"
+        )
 
     with k3:
-        st.metric("Copertura",
-                  f"{len(platforms)} piattaforme / {competitors} competitor",
-                  delta=f"{prompts} prompt totali")
+        st.metric(
+            "Copertura",
+            f"{prompts} prompt",
+            delta=f"{competitors} competitor"
+        )
 
+    # Riepilogo
     st.markdown("---")
-    st.subheader("📋 Riepilogo configurazione")
-    left, right = st.columns(2)
-    with left:
-        st.markdown(f"- Prompt: **{prompts}**")
-        st.markdown(f"- Competitor: **{competitors}**")
-        st.markdown(f"- Piattaforme: **{', '.join(platforms) if platforms else '—'}**")
-    with right:
-        st.markdown(f"- Frequenza: **{frequency}**")
-        st.markdown(f"- Pagine: **{pages}**")
-        st.markdown(f"- Domini: **{domains}**")
+    st.subheader("📋 Configurazione")
+    
+    recap_col1, recap_col2 = st.columns(2)
+    with recap_col1:
+        st.markdown(f"**Prompt:** {prompts}")
+        st.markdown(f"**Competitor:** {competitors}")
+        st.markdown(f"**Frequenza:** {frequency}")
+    with recap_col2:
+        st.markdown(f"**Pagine:** {pages}")
+        st.markdown(f"**Domini:** {domains}")
+        st.markdown(f"**Ciclo:** {'Mensile' if billing_cycle=='monthly' else 'Annuale'}")
 
-    # Tabella breakdown (semplificata, senza brand)
-    st.markdown("---")
-    st.subheader("📈 Range suggerito per scenario")
-    data = []
-    # Tre archetipi: Starter, Growth, Enterprise — per dare un riferimento mentale
-    scenarios = [
-        ("Starter", 0.9, 0.95),
-        ("Growth", 1.0, 1.05),
-        ("Enterprise", 1.15, 1.30)
-    ]
-    for name, low_mult, high_mult in scenarios:
-        row_low  = int(low_m  * low_mult)
-        row_high = int(high_m * high_mult)
-        data.append({
-            "Scenario": name,
-            "Mensile (min)": currency_fmt(row_low, currency),
-            "Mensile (max)": currency_fmt(row_high, currency),
-            "Annuale (stimato)": currency_fmt(int((row_low + row_high)/2 * 12 * (0.86 if billing_cycle == "yearly" else 1.0)), currency)
-        })
-    st.dataframe(pd.DataFrame(data), use_container_width=True, hide_index=True)
-
-    # Export report testo
-    st.markdown("---")
-    st.subheader("⬇️ Esporta stima (TXT)")
-    report = f"""AI BRAND MONITORING — BUDGET ESTIMATOR
-Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-
-CONFIGURAZIONE
-- Prompt: {prompts}
-- Competitor: {competitors}
-- Piattaforme: {", ".join(platforms) if platforms else "—"}
-- Frequenza: {frequency}
-- Pagine: {pages}
-- Domini: {domains}
-
-STIMA BUDGET {'MENSILE' if billing_cycle=='monthly' else 'ANNUALE'}
-- Range: {currency_fmt(low_m if billing_cycle=='monthly' else low_y, currency)} — {currency_fmt(high_m if billing_cycle=='monthly' else high_y, currency)}
-- Costo per prompt (mensile): {currency}{cpp_low:,.2f} — {currency}{cpp_high:,.2f}
-
-NOTE
-- Stima indicativa, tool-agnostica, utile come riferimento marketing/benchmark.
-- Per un'offerta ufficiale è consigliata un'analisi tecnica più approfondita.
-"""
-    st.download_button(
-        "📥 Scarica TXT",
-        data=report,
-        file_name=f"ai_brand_monitoring_budget_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-        mime="text/plain",
-        use_container_width=True
-    )
-
-# Footer minimale
+# Footer
 st.markdown("---")
-st.caption("© 2025 — AI Brand Monitoring Budget Estimator (tool-agnostico).")
+st.caption("🤖 ChatGPT Brand Monitoring Budget Estimator")
