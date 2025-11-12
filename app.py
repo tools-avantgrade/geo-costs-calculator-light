@@ -282,21 +282,6 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
         st.markdown(f"**📁 Progetti:** {projects}")
         st.markdown(f"**💳 Fatturazione:** {'Mensile' if billing_cycle=='monthly' else 'Annuale'}")
     
-    # --- BENCHMARK COMPETITOR ---
-    st.markdown("---")
-    st.subheader("📊 Confronto con il Mercato")
-    
-    st.markdown("""
-    <div class="info-box">
-    <small>
-    <strong>Benchmark tool simili:</strong><br>
-    • <strong>Otterly.ai</strong>: $189/mese per 100 prompts (daily tracking)<br>
-    • <strong>Profound</strong>: $499/mese per 200 prompts (daily tracking)<br>
-    • <strong>Il tuo range</strong>: prezzi competitivi basati sul volume di prompt
-    </small>
-    </div>
-    """, unsafe_allow_html=True)
-    
     # --- NOTE FINALI ---
     if frequency == "Real-time":
         st.info("💡 **Real-time monitoring** include aggiornamenti continui e alert istantanei.")
@@ -306,5 +291,4 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("🤖 AI Brand Monitoring Budget Estimator v2.0 | Basato su analisi Otterly & Profound")
-st.caption("💬 Questo tool fornisce stime indicative. Per preventivi ufficiali, contatta il team sales.")
+st.caption("🤖 AI Brand Monitoring Budget Estimator")
