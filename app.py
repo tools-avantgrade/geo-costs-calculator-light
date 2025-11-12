@@ -170,16 +170,6 @@ def currency_fmt(val, currency="€"):
 
 st.title("🔎 AI Brand Monitoring")
 st.subheader("Budget Estimator per ChatGPT")
-
-st.markdown("""
-<div class="info-box">
-<small>
-💡 <strong>Stima indicativa</strong> basata sui prezzi di mercato dei principali tool di AI monitoring 
-(Otterly.ai, Profound). Non sostituisce un preventivo ufficiale.
-</small>
-</div>
-""", unsafe_allow_html=True)
-
 st.markdown("---")
 
 # --- INPUT PARAMETERS ---
