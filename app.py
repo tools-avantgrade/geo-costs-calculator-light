@@ -1,11 +1,11 @@
-# app.py
+# app_optimized.py
 # ---------------------------------------------------
 # AI Brand Monitoring - Budget Estimator (ChatGPT Focus)
-# Versione minimal e focalizzata
+# Versione ottimizzata con pricing realistico
+# Basato su analisi Otterly.ai e Profound
 # ---------------------------------------------------
 
 import streamlit as st
-from datetime import datetime
 
 # -----------------------------
 # Configurazione pagina
@@ -38,146 +38,194 @@ st.markdown("""
         border-radius: 8px;
         border-left: 4px solid #FF8C42;
     }
+    .info-box {
+        background-color: #FFF9F0;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 3px solid #FFB366;
+        margin: 1rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-HINT = """
-<small style="opacity:0.75">
-Stima indicativa basata su benchmark di mercato per il monitoraggio ChatGPT. 
-Non sostituisce un preventivo ufficiale.
-</small>
-"""
+# -----------------------------
+# Logica di pricing ottimizzata
+# -----------------------------
+
+FREQUENCY_MULTIPLIER = {
+    "Settimanale": 0.75,   # Sconto per tracking meno frequente
+    "Giornaliero": 1.00,   # Baseline (standard di mercato)
+    "Real-time": 1.60      # Premium per monitoring continuo
+}
+
+def estimate_budget(
+    prompts: int,
+    frequency: str,
+    projects: int,
+    billing_cycle: str = "monthly"
+):
+    """
+    Calcola il budget basandosi sui prezzi di mercato reali:
+    - Otterly: $189/mese per 100 prompts (daily)
+    - Profound: $499/mese per 200 prompts (daily)
+    
+    Logica:
+    - Costo base per prompt: €1.20-1.90 (range competitivo)
+    - Frequenza: daily=baseline, settimanale=-25%, real-time=+60%
+    - Progetti: 1=baseline, poi +40-60€ per progetto extra
+    """
+    
+    # --- COSTO BASE PER PROMPTS ---
+    # Range realistico: €1.20-1.90 per prompt/mese
+    if prompts <= 15:
+        cost_per_prompt_low = 1.90
+        cost_per_prompt_high = 2.50
+    elif prompts <= 50:
+        cost_per_prompt_low = 1.60
+        cost_per_prompt_high = 2.20
+    elif prompts <= 100:
+        cost_per_prompt_low = 1.40
+        cost_per_prompt_high = 1.90
+    elif prompts <= 200:
+        cost_per_prompt_low = 1.20
+        cost_per_prompt_high = 1.70
+    elif prompts <= 400:
+        cost_per_prompt_low = 1.00
+        cost_per_prompt_high = 1.50
+    else:
+        # Oltre 400: economie di scala
+        cost_per_prompt_low = 0.85
+        cost_per_prompt_high = 1.30
+    
+    base_low = prompts * cost_per_prompt_low
+    base_high = prompts * cost_per_prompt_high
+    
+    # --- FREQUENZA ---
+    freq_mult = FREQUENCY_MULTIPLIER.get(frequency, 1.0)
+    
+    # --- PROGETTI EXTRA ---
+    # 1 progetto = baseline (incluso)
+    # Ogni progetto extra: +€40-60/mese
+    project_cost = 0
+    if projects > 1:
+        extra_projects = projects - 1
+        project_cost_low = 40 * extra_projects
+        project_cost_high = 60 * extra_projects
+    else:
+        project_cost_low = 0
+        project_cost_high = 0
+    
+    # --- CALCOLO TOTALE MENSILE ---
+    low_month = (base_low + project_cost_low) * freq_mult
+    high_month = (base_high + project_cost_high) * freq_mult
+    
+    # --- ARROTONDAMENTO MARKETING ---
+    def round_marketing(x):
+        if x < 50:    return int(round(x / 5.0)) * 5
+        if x < 100:   return int(round(x / 10.0)) * 10
+        if x < 500:   return int(round(x / 25.0)) * 25
+        if x < 1000:  return int(round(x / 50.0)) * 50
+        return int(round(x / 100.0)) * 100
+    
+    low_month_rounded = round_marketing(low_month)
+    high_month_rounded = round_marketing(max(high_month, low_month_rounded + 20))
+    
+    # Assicuriamo un minimo ragionevole
+    low_month_rounded = max(low_month_rounded, 25)
+    high_month_rounded = max(high_month_rounded, low_month_rounded + 20)
+    
+    # --- CALCOLO ANNUALE CON SCONTO ---
+    if billing_cycle == "yearly":
+        # Sconto 12-15% per pagamento annuale
+        avg_monthly = (low_month_rounded + high_month_rounded) / 2
+        
+        if avg_monthly < 150:
+            discount = 0.88  # -12%
+        elif avg_monthly < 400:
+            discount = 0.86  # -14%
+        else:
+            discount = 0.85  # -15%
+        
+        low_year = int(low_month_rounded * 12 * discount)
+        high_year = int(high_month_rounded * 12 * discount)
+        
+        # Arrotonda annuale
+        low_year = round_marketing(low_year)
+        high_year = round_marketing(high_year)
+        
+        return (low_month_rounded, high_month_rounded, low_year, high_year)
+    else:
+        return (low_month_rounded, high_month_rounded, None, None)
 
 def currency_fmt(val, currency="€"):
+    """Formatta il valore come valuta"""
     try:
         return f"{currency}{val:,.0f}".replace(",", ".")
     except Exception:
         return f"{currency}{val}"
 
 # -----------------------------
-# Logica di pricing (ChatGPT focus)
+# UI PRINCIPALE
 # -----------------------------
-FREQUENCY_MULTIPLIER = {
-    "Settimanale": 1.00,
-    "Giornaliero": 1.35,
-    "Real-time": 1.90
-}
 
-def estimate_budget(
-    prompts: int,
-    competitors: int,
-    frequency: str,
-    pages: int,
-    domains: int,
-    billing_cycle: str = "monthly"
-):
-    # Base cost
-    if prompts <= 25:
-        base_low, base_high = 80, 140
-    elif prompts <= 100:
-        base_low, base_high = 180, 320
-    elif prompts <= 400:
-        base_low, base_high = 360, 740
-    else:
-        extra_blocks = max(0, (prompts - 400 + 99) // 100)
-        base_low, base_high = 740 + 90*extra_blocks, 1200 + 150*extra_blocks
+st.title("🔎 AI Brand Monitoring")
+st.subheader("Budget Estimator per ChatGPT")
 
-    # Frequenza
-    freq_mult = FREQUENCY_MULTIPLIER.get(frequency, 1.0)
+st.markdown("""
+<div class="info-box">
+<small>
+💡 <strong>Stima indicativa</strong> basata sui prezzi di mercato dei principali tool di AI monitoring 
+(Otterly.ai, Profound). Non sostituisce un preventivo ufficiale.
+</small>
+</div>
+""", unsafe_allow_html=True)
 
-    # Competitor
-    comp_low  = 10 * competitors
-    comp_high = 20 * competitors
-
-    # Pagine
-    page_bucket = 0
-    if pages <= 1000:
-        page_bucket = 0
-    elif pages <= 3000:
-        page_bucket = 60
-    elif pages <= 5000:
-        page_bucket = 120
-    else:
-        extra = ((pages - 5000) + 999) // 1000
-        page_bucket = 120 + 40 * extra
-
-    # Domini
-    domain_bucket = 0
-    if domains <= 1:
-        domain_bucket = 0
-    elif domains <= 5:
-        domain_bucket = 60
-    elif domains <= 10:
-        domain_bucket = 120
-    else:
-        domain_bucket = 120 + 20 * (domains - 10)
-
-    # Aggregazione mensile
-    low_month  = (base_low  + comp_low  + page_bucket + domain_bucket) * freq_mult
-    high_month = (base_high + comp_high + page_bucket + domain_bucket) * freq_mult
-
-    # Arrotondamento
-    def round_marketing(x):
-        if x < 100:   return int(round(x / 10.0)) * 10
-        if x < 1000:  return int(round(x / 25.0)) * 25
-        if x < 2000:  return int(round(x / 50.0)) * 50
-        return int(round(x / 100.0)) * 100
-
-    low_month_rounded  = round_marketing(low_month)
-    high_month_rounded = round_marketing(max(high_month, low_month_rounded + 20))
-
-    # Calcolo annuale con sconto
-    if billing_cycle == "yearly":
-        avg_m = (low_month_rounded + high_month_rounded) / 2
-        if   avg_m < 200: disc = 0.90
-        elif avg_m < 800: disc = 0.88
-        else:             disc = 0.85
-        low_year  = int(low_month_rounded  * 12 * disc)
-        high_year = int(high_month_rounded * 12 * disc)
-        return (low_month_rounded, high_month_rounded, low_year, high_year)
-    else:
-        return (low_month_rounded, high_month_rounded, None, None)
-
-# -----------------------------
-# UI
-# -----------------------------
-st.title("🔎 ChatGPT Brand Monitoring")
-st.subheader("Budget Estimator")
-st.markdown(HINT, unsafe_allow_html=True)
 st.markdown("---")
 
-# Input in due colonne
+# --- INPUT PARAMETERS ---
 col1, col2 = st.columns(2)
 
 with col1:
     prompts = st.number_input(
-        "Prompt da monitorare",
-        min_value=1, max_value=5000, value=100, step=10,
-        help="Quante query vuoi tracciare su ChatGPT"
+        "🔍 Prompt da monitorare",
+        min_value=1, 
+        max_value=2000, 
+        value=100, 
+        step=5,
+        help="📌 **Cosa sono i prompt?**\n\nSono le domande/query che vuoi tracciare su ChatGPT.\n\n"
+             "**Esempi:**\n"
+             "• 'Migliori CRM per PMI'\n"
+             "• 'Come fare SEO nel 2025'\n"
+             "• 'Differenza tra Ahrefs e Semrush'\n\n"
+             "Il tool verifica **se e come il tuo brand viene citato** nelle risposte di ChatGPT."
     )
-    competitors = st.number_input(
-        "Competitor",
-        min_value=0, max_value=30, value=3, step=1
-    )
+    
     frequency = st.select_slider(
-        "Frequenza monitoraggio",
+        "⏱️ Frequenza monitoraggio",
         options=["Settimanale", "Giornaliero", "Real-time"],
-        value="Settimanale"
+        value="Giornaliero",
+        help="**Giornaliero** è lo standard di mercato. Real-time è premium (+60%)."
     )
 
 with col2:
-    pages = st.number_input(
-        "Pagine sito",
-        min_value=100, max_value=20000, value=1000, step=100
+    projects = st.number_input(
+        "📁 Progetti (domini)",
+        min_value=1, 
+        max_value=20, 
+        value=1, 
+        step=1,
+        help="📌 **Cosa sono i progetti?**\n\n"
+             "Quanti **brand/siti web diversi** vuoi monitorare.\n\n"
+             "**Esempi:**\n"
+             "• 1 progetto = solo MioSito.com\n"
+             "• 3 progetti = MioSito.com + MioBlog.it + Shop.com\n\n"
+             "Ogni progetto extra aggiunge €40-60/mese al costo."
     )
-    domains = st.number_input(
-        "Domini/progetti",
-        min_value=1, max_value=50, value=1, step=1
-    )
+    
     billing_cycle = st.radio(
-        "Fatturazione",
+        "💳 Ciclo di fatturazione",
         options=["monthly", "yearly"],
-        format_func=lambda x: "Mensile" if x == "monthly" else "Annuale",
+        format_func=lambda x: "📅 Mensile" if x == "monthly" else "📆 Annuale (sconto 12-15%)",
         horizontal=True
     )
 
@@ -185,64 +233,88 @@ currency = "€"
 
 st.markdown("---")
 
-# Calcolo
+# --- CALCOLO BUDGET ---
 if st.button("🧮 Calcola Budget", use_container_width=True):
+    
     low_m, high_m, low_y, high_y = estimate_budget(
         prompts=prompts,
-        competitors=competitors,
         frequency=frequency,
-        pages=pages,
-        domains=domains,
+        projects=projects,
         billing_cycle=billing_cycle
     )
-
+    
     st.success("✅ Stima completata")
     st.markdown("<br>", unsafe_allow_html=True)
-
-    # Metriche principali
+    
+    # --- METRICHE PRINCIPALI ---
     k1, k2, k3 = st.columns(3)
     
     with k1:
         if billing_cycle == "monthly":
             st.metric(
-                "Budget Mensile", 
-                f"{currency_fmt(low_m, currency)} — {currency_fmt(high_m, currency)}"
+                "💰 Budget Mensile", 
+                f"{currency_fmt(low_m, currency)} - {currency_fmt(high_m, currency)}"
             )
         else:
+            monthly_avg = (low_m + high_m) // 2
+            savings = (monthly_avg * 12) - ((low_y + high_y) // 2)
             st.metric(
-                "Budget Annuale",
-                f"{currency_fmt(low_y, currency)} — {currency_fmt(high_y, currency)}"
+                "💰 Budget Annuale",
+                f"{currency_fmt(low_y, currency)} - {currency_fmt(high_y, currency)}",
+                delta=f"-{currency_fmt(savings, currency)} vs mensile"
             )
-
+    
     with k2:
         cpp_low = low_m / prompts if prompts > 0 else 0
         cpp_high = high_m / prompts if prompts > 0 else 0
         st.metric(
-            "Costo per Prompt",
-            f"{currency}{cpp_low:.2f} — {currency}{cpp_high:.2f}"
+            "📊 Costo per Prompt",
+            f"{currency}{cpp_low:.2f} - {currency}{cpp_high:.2f}",
+            help="Costo mensile diviso per numero di prompt monitorati"
         )
-
+    
     with k3:
         st.metric(
-            "Copertura",
+            "📈 Copertura",
             f"{prompts} prompt",
-            delta=f"{competitors} competitor"
+            delta=f"{projects} progetto{'i' if projects > 1 else ''}"
         )
-
-    # Riepilogo
+    
+    # --- RIEPILOGO CONFIGURAZIONE ---
     st.markdown("---")
-    st.subheader("📋 Configurazione")
+    st.subheader("📋 Configurazione Selezionata")
     
     recap_col1, recap_col2 = st.columns(2)
     with recap_col1:
-        st.markdown(f"**Prompt:** {prompts}")
-        st.markdown(f"**Competitor:** {competitors}")
-        st.markdown(f"**Frequenza:** {frequency}")
+        st.markdown(f"**🔍 Prompt monitorati:** {prompts}")
+        st.markdown(f"**⏱️ Frequenza:** {frequency}")
     with recap_col2:
-        st.markdown(f"**Pagine:** {pages}")
-        st.markdown(f"**Domini:** {domains}")
-        st.markdown(f"**Ciclo:** {'Mensile' if billing_cycle=='monthly' else 'Annuale'}")
+        st.markdown(f"**📁 Progetti:** {projects}")
+        st.markdown(f"**💳 Fatturazione:** {'Mensile' if billing_cycle=='monthly' else 'Annuale'}")
+    
+    # --- BENCHMARK COMPETITOR ---
+    st.markdown("---")
+    st.subheader("📊 Confronto con il Mercato")
+    
+    st.markdown("""
+    <div class="info-box">
+    <small>
+    <strong>Benchmark tool simili:</strong><br>
+    • <strong>Otterly.ai</strong>: $189/mese per 100 prompts (daily tracking)<br>
+    • <strong>Profound</strong>: $499/mese per 200 prompts (daily tracking)<br>
+    • <strong>Il tuo range</strong>: prezzi competitivi basati sul volume di prompt
+    </small>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # --- NOTE FINALI ---
+    if frequency == "Real-time":
+        st.info("💡 **Real-time monitoring** include aggiornamenti continui e alert istantanei.")
+    
+    if projects > 3:
+        st.warning("⚠️ Per **progetti enterprise** (5+ brand), contatta il sales per pricing personalizzato.")
 
-# Footer
+# --- FOOTER ---
 st.markdown("---")
-st.caption("🤖 ChatGPT Brand Monitoring Budget Estimator")
+st.caption("🤖 AI Brand Monitoring Budget Estimator v2.0 | Basato su analisi Otterly & Profound")
+st.caption("💬 Questo tool fornisce stime indicative. Per preventivi ufficiali, contatta il team sales.")
