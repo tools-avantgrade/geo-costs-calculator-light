@@ -74,7 +74,6 @@ st.markdown("""
     }
     .cta-box h3 {
         color: white;
-        margin-bottom: 1.5rem;
         font-size: 1.5rem;
         font-weight: 600;
     }
