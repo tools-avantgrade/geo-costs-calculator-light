@@ -62,39 +62,42 @@ st.markdown("""
         margin: 1rem 0;
     }
     .cta-box {
-        background: linear-gradient(135deg, #FF8C42 0%, #FF7028 100%);
-        padding: 2rem;
+        background-color: #FFFFFF;
+        padding: 2.5rem 2rem;
         border-radius: 12px;
         text-align: center;
         margin: 2rem 0;
-        box-shadow: 0 4px 15px rgba(255, 140, 66, 0.3);
+        border: 2px solid #FFE5D9;
+        box-shadow: 0 4px 15px rgba(255, 140, 66, 0.15);
+    }
+    .cta-box img {
+        max-width: 180px;
+        margin-bottom: 1.5rem;
     }
     .cta-box h3 {
-        color: white;
-        margin-bottom: 1rem;
-        font-size: 1.5rem;
-    }
-    .cta-box p {
-        color: white;
+        color: #2C3E50;
         margin-bottom: 1.5rem;
-        font-size: 1.1rem;
+        font-size: 1.5rem;
+        font-weight: 600;
     }
     .cta-button {
         display: inline-block;
-        background-color: white;
-        color: #FF8C42;
+        background-color: #FF8C42;
+        color: white;
         padding: 1rem 2.5rem;
         border-radius: 8px;
         text-decoration: none;
         font-weight: 700;
         font-size: 1.1rem;
         transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
     }
     .cta-button:hover {
+        background-color: #FF7028;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        color: #FF7028;
+        box-shadow: 0 4px 12px rgba(255, 140, 66, 0.4);
+        color: white;
+        text-decoration: none;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -287,7 +290,34 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
     st.success("✅ Stima completata")
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # --- METRICHE PRINCIPALI ---
+    # --- 1. CTA POST-ANALISI (PRIMA) ---
+    cta_html = """
+    <div class="cta-box">
+        <img src="https://www.avantgrade.com/wp-content/themes/avantgrade/assets/img/logo-colored.svg" alt="Avantgrade Logo">
+        <h3>🚀 Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
+        <a href="https://www.avantgrade.com/schedule-a-call?utm_source=streamlit" target="_blank" class="cta-button">
+            📞 Prenota una Consulenza Gratuita
+        </a>
+    </div>
+    """
+    st.markdown(cta_html, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # --- 2. RIEPILOGO CONFIGURAZIONE (SECONDO) ---
+    st.subheader("📋 Configurazione Selezionata")
+    
+    recap_col1, recap_col2 = st.columns(2)
+    with recap_col1:
+        st.markdown(f"**🔍 Prompt monitorati:** {prompts}")
+        st.markdown(f"**⏱️ Frequenza:** {frequency}")
+    with recap_col2:
+        st.markdown(f"**📁 Progetti:** {projects}")
+        st.markdown(f"**💳 Fatturazione:** {'Mensile' if billing_cycle=='monthly' else 'Annuale'}")
+    
+    st.markdown("---")
+    
+    # --- 3. METRICHE PRINCIPALI (TERZO) ---
     k1, k2, k3 = st.columns(3)
     
     with k1:
@@ -321,36 +351,12 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
             delta=f"{projects} progetto{'i' if projects > 1 else ''}"
         )
     
-    # --- RIEPILOGO CONFIGURAZIONE ---
-    st.markdown("---")
-    st.subheader("📋 Configurazione Selezionata")
-    
-    recap_col1, recap_col2 = st.columns(2)
-    with recap_col1:
-        st.markdown(f"**🔍 Prompt monitorati:** {prompts}")
-        st.markdown(f"**⏱️ Frequenza:** {frequency}")
-    with recap_col2:
-        st.markdown(f"**📁 Progetti:** {projects}")
-        st.markdown(f"**💳 Fatturazione:** {'Mensile' if billing_cycle=='monthly' else 'Annuale'}")
-    
     # --- NOTE FINALI ---
     if frequency == "Real-time":
         st.info("💡 **Real-time monitoring** include aggiornamenti continui e alert istantanei.")
     
     if projects > 3:
         st.warning("⚠️ Per **progetti enterprise** (5+ brand), contatta il sales per pricing personalizzato.")
-    
-    # --- CTA POST-ANALISI ---
-    st.markdown("---")
-    cta_html = """
-    <div class="cta-box">
-        <h3>Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
-        <a href="https://www.avantgrade.com/schedule-a-call?utm_source=streamlit" target="_blank" class="cta-button">
-            Prenota una Consulenza Gratuita
-        </a>
-    </div>
-    """
-    st.markdown(cta_html, unsafe_allow_html=True)
 
 # --- FOOTER ---
 st.markdown("---")
