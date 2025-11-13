@@ -62,7 +62,7 @@ st.markdown("""
         margin: 1rem 0;
     }
     .cta-box {
-        background-color: #FFFFFF;
+        background-color: transparent;
         padding: 2.5rem 2rem;
         border-radius: 12px;
         text-align: center;
