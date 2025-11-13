@@ -290,7 +290,7 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
     cta_html = """
     <div class="cta-box">
         <img src="https://www.avantgrade.com/wp-content/themes/avantgrade/assets/img/logo-colored.svg" alt="Avantgrade Logo">
-        <h3>Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
+        <h3>Vuoi far crescere il tuo business su Chat GPT?</h3>
         <a href="https://www.avantgrade.com/schedule-a-call?utm_source=streamlit" target="_blank" class="cta-button">
             Prenota una Consulenza Gratuita
         </a>
