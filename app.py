@@ -65,7 +65,6 @@ st.markdown("""
     /* CTA Box Container */
     .cta-box {
         background-color: transparent;
-        padding: 2.5rem 1.5rem;
         border-radius: 12px;
         text-align: center;
     }
