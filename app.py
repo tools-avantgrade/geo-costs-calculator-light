@@ -344,10 +344,9 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
     st.markdown("---")
     cta_html = """
     <div class="cta-box">
-        <h3>🚀 Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
-        <p>Ricevi un'analisi gratuita personalizzata da Avantgrade, agenzia SEO specializzata in AI Brand Monitoring</p>
+        <h3>Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
         <a href="https://www.avantgrade.com/schedule-a-call?utm_source=streamlit" target="_blank" class="cta-button">
-            📞 Prenota una Consulenza Gratuita
+            Prenota una Consulenza Gratuita
         </a>
     </div>
     """
