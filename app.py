@@ -66,9 +66,7 @@ st.markdown("""
         padding: 2.5rem 2rem;
         border-radius: 12px;
         text-align: center;
-        margin: 2rem 0;
-        border: 2px solid #FFE5D9;
-        box-shadow: 0 4px 15px rgba(255, 140, 66, 0.15);
+        margin: 1rem 0;
     }
     .cta-box img {
         max-width: 180px;
