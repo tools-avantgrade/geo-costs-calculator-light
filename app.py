@@ -63,10 +63,9 @@ st.markdown("""
     }
     .cta-box {
         background-color: transparent;
-        padding: 2.5rem 2rem;
+        padding: 2rem 1.5rem;
         border-radius: 12px;
         text-align: center;
-        margin: 1rem 0;
     }
     .cta-box img {
         max-width: 180px;
