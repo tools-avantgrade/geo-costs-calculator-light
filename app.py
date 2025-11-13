@@ -83,7 +83,7 @@ st.markdown("""
     .cta-button {
         display: inline-block;
         background-color: #FF8C42;
-        color: white;
+        color: white !important;
         padding: 1rem 2.5rem;
         border-radius: 8px;
         text-decoration: none;
@@ -294,9 +294,9 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
     cta_html = """
     <div class="cta-box">
         <img src="https://www.avantgrade.com/wp-content/themes/avantgrade/assets/img/logo-colored.svg" alt="Avantgrade Logo">
-        <h3>🚀 Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
+        <h3>Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
         <a href="https://www.avantgrade.com/schedule-a-call?utm_source=streamlit" target="_blank" class="cta-button">
-            📞 Prenota una Consulenza Gratuita
+            Prenota una Consulenza Gratuita
         </a>
     </div>
     """
@@ -360,4 +360,4 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("🤖 AI Brand Monitoring Budget Estimator | Powered by Avantgrade")
+st.caption("🤖 AI Brand Monitoring Budget Estimator | Powered by Avantgrade.com")
