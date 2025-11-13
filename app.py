@@ -70,10 +70,11 @@ st.markdown("""
     }
     .cta-box img {
         max-width: 180px;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
     }
     .cta-box h3 {
         color: white;
+        margin-bottom: 0.75rem;
         font-size: 1.5rem;
         font-weight: 600;
     }
