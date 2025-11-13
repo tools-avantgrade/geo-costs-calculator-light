@@ -177,7 +177,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     prompts = st.number_input(
-        "🔍 Prompt da monitorare",
+        "🔍 Domanda (prompt) da monitorare",
         min_value=1, 
         max_value=2000, 
         value=100, 
