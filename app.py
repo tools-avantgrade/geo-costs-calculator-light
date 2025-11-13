@@ -286,7 +286,6 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
     )
     
     st.success("✅ Stima completata")
-    st.markdown("<br>", unsafe_allow_html=True)
     
     # --- 1. CTA POST-ANALISI (PRIMA) ---
     cta_html = """
