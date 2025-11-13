@@ -1,11 +1,12 @@
 # app_optimized.py
 # ---------------------------------------------------
 # AI Brand Monitoring - Budget Estimator (ChatGPT Focus)
-# Versione ottimizzata con pricing realistico
+# Versione ottimizzata con pricing realistico + GTM + CTA
 # Basato su analisi Otterly.ai e Profound
 # ---------------------------------------------------
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 # -----------------------------
 # Configurazione pagina
@@ -15,6 +16,21 @@ st.set_page_config(
     page_icon="🔎",
     layout="centered"
 )
+
+# -----------------------------
+# Google Tag Manager
+# -----------------------------
+gtm_head = """
+<!-- Google Tag Manager -->
+<script data-cookieconsent="ignore">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KJPT9B7');</script>
+<!-- End Google Tag Manager -->
+"""
+
+components.html(gtm_head, height=0)
 
 # -----------------------------
 # Stili custom (toni arancioni)
@@ -44,6 +60,41 @@ st.markdown("""
         border-radius: 8px;
         border-left: 3px solid #FFB366;
         margin: 1rem 0;
+    }
+    .cta-box {
+        background: linear-gradient(135deg, #FF8C42 0%, #FF7028 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        margin: 2rem 0;
+        box-shadow: 0 4px 15px rgba(255, 140, 66, 0.3);
+    }
+    .cta-box h3 {
+        color: white;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    .cta-box p {
+        color: white;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+    .cta-button {
+        display: inline-block;
+        background-color: white;
+        color: #FF8C42;
+        padding: 1rem 2.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        color: #FF7028;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -288,7 +339,20 @@ if st.button("🧮 Calcola Budget", use_container_width=True):
     
     if projects > 3:
         st.warning("⚠️ Per **progetti enterprise** (5+ brand), contatta il sales per pricing personalizzato.")
+    
+    # --- CTA POST-ANALISI ---
+    st.markdown("---")
+    cta_html = """
+    <div class="cta-box">
+        <h3>🚀 Vuoi scoprire come il tuo brand viene percepito dalle AI?</h3>
+        <p>Ricevi un'analisi gratuita personalizzata da Avantgrade, agenzia SEO specializzata in AI Brand Monitoring</p>
+        <a href="https://www.avantgrade.com/schedule-a-call?utm_source=streamlit" target="_blank" class="cta-button">
+            📞 Prenota una Consulenza Gratuita
+        </a>
+    </div>
+    """
+    st.markdown(cta_html, unsafe_allow_html=True)
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("🤖 AI Brand Monitoring Budget Estimator")
+st.caption("🤖 AI Brand Monitoring Budget Estimator | Powered by Avantgrade")
